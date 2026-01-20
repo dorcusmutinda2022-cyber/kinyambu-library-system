@@ -1,0 +1,307 @@
+-<!DOCTYPE html>
+<html>
+<head>
+<title>KINYAMBU LIBRARY MANAGEMENT SYSTEM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{font-family: Arial;background:#2c3e50;color:white;margin:0;}
+.container{background:#34495e;padding:20px;margin:20px;border-radius:10px;}
+button{padding:10px;margin:5px;background:#1abc9c;border:none;color:black;font-weight:bold;cursor:pointer;border-radius:5px;}
+input, select{padding:8px;margin:5px;width:250px;border-radius:5px;border:none;}
+table{width:100%;background:white;color:black;border-collapse: collapse;margin-top:10px;}
+th,td{padding:10px;border:1px solid black;text-align:center;}
+tr:nth-child(even){background:#f2f2f2;}
+.dashboard{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+.box{background:#e67e22;padding:15px;border-radius:10px;width:23%;text-align:center;}
+#login{width:350px;margin:80px auto;background:#1abc9c;padding:20px;border-radius:10px;color:black;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>KINYAMBU LIBRARY ONLINE MANAGEMENT SYSTEM</h1>
+
+<!-- LOGIN -->
+<div id="login">
+<h3>Admin Login</h3>
+Username: <input id="user"><br>
+Password: <input type="password" id="pass"><br>
+<button onclick="login()">Login</button>
+<p id="msg"></p>
+</div>
+
+<!-- MENU -->
+<nav id="menu" style="display:none;">
+<button onclick="show('categories')">Manage Categories</button>
+<button onclick="show('books')">Available Books</button>
+<button onclick="show('borrowers')">Borrowers Details</button>
+<button onclick="show('borrow')">Borrow / Return</button>
+<button onclick="show('records')">Records</button>
+</nav>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="dashboard" style="display:none;">
+<div class="box">Total Books<br><span id="totalBooks">0</span></div>
+<div class="box">Available Copies<br><span id="availableBooks">0</span></div>
+<div class="box">Borrowed Books<br><span id="borrowedBooks">0</span></div>
+<div class="box">Total Borrowers<br><span id="totalBorrowers">0</span></div>
+</div>
+
+<!-- MANAGE CATEGORIES -->
+<div id="categories" style="display:none;">
+<h3>Manage Categories</h3>
+Category Name: <input id="newCategory"><br>
+<button onclick="addCategory()">Add Category</button>
+<hr>
+<h4>Existing Categories:</h4>
+<ul id="categoryList"></ul>
+</div>
+
+<!-- AVAILABLE BOOKS -->
+<div id="books" style="display:none;">
+<h3>Available Books</h3>
+Book Title: <input id="btitle"><br>
+Author: <input id="bauthor"><br>
+Category:
+<select id="bcategory"></select><br>
+Copies: <input id="bcopies" type="number"><br>
+<button onclick="addBook()">Add Book</button>
+
+<hr>
+<h3>Books by Category</h3>
+<div id="booksByCategory"></div>
+</div>
+
+<!-- BORROWERS -->
+<div id="borrowers" style="display:none;">
+<h3>Borrowers Details</h3>
+Name: <input id="name"><br>
+Phone: <input id="phone"><br>
+ID Number: <input id="idno"><br>
+<button onclick="addBorrower()">Register Borrower</button>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Phone</th>
+<th>ID Number</th>
+</tr>
+</thead>
+<tbody id="borrowerTable"></tbody>
+</table>
+</div>
+
+<!-- BORROW / RETURN -->
+<div id="borrow" style="display:none;">
+<h3>Borrow / Return Books</h3>
+Select Borrower: <select id="selectBorrower"></select><br>
+Select Book: <select id="selectBook"></select><br>
+Date Borrowed: <input type="date" id="dateBorrowed"><br>
+Due Date: <input type="date" id="dateDue"><br>
+<button onclick="borrowBook()">Borrow Book</button>
+<button onclick="returnBook()">Return Book</button>
+</div>
+
+<!-- RECORDS -->
+<div id="records" style="display:none;">
+<h3>Borrowing Records</h3>
+<table>
+<thead>
+<tr>
+<th>Borrower</th>
+<th>Book</th>
+<th>Date Borrowed</th>
+<th>Due Date</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="recordTable"></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+let categories=[];
+let books=[];
+let borrowers=[];
+let records=[];
+
+// LOGIN
+function login(){
+let u=document.getElementById("user").value.trim();
+let p=document.getElementById("pass").value.trim();
+if(u=="kinyambu" && p=="KINYAMBU2026"){
+document.getElementById("login").style.display="none";
+document.getElementById("menu").style.display="block";
+document.getElementById("dashboard").style.display="flex";
+show('categories');
+}else{
+document.getElementById("msg").innerHTML="Invalid Login Credentials";
+}
+}
+
+// SHOW SECTION
+function show(id){
+document.getElementById("categories").style.display="none";
+document.getElementById("books").style.display="none";
+document.getElementById("borrowers").style.display="none";
+document.getElementById("borrow").style.display="none";
+document.getElementById("records").style.display="none";
+document.getElementById(id).style.display="block";
+updateDashboard();
+updateSelects();
+displayCategories();
+displayBooksByCategory();
+}
+
+// CATEGORY MANAGEMENT
+function addCategory(){
+let c=document.getElementById("newCategory").value.trim();
+if(c=="" || categories.includes(c)){alert("Invalid or duplicate category");return;}
+categories.push(c);
+document.getElementById("newCategory").value="";
+displayCategories();
+updateCategoryDropdown();
+}
+
+function displayCategories(){
+let html="";
+for(let c of categories){
+html+=`<li>${c}</li>`;
+}
+document.getElementById("categoryList").innerHTML=html;
+}
+
+// UPDATE CATEGORY DROPDOWN IN BOOKS
+function updateCategoryDropdown(){
+let html="";
+for(let c of categories){
+html+=`<option>${c}</option>`;
+}
+document.getElementById("bcategory").innerHTML=html;
+}
+
+// ADD BOOK
+function addBook(){
+let title=document.getElementById("btitle").value.trim();
+let author=document.getElementById("bauthor").value.trim();
+let category=document.getElementById("bcategory").value;
+let copies=parseInt(document.getElementById("bcopies").value);
+if(title==""||author==""||copies<=0){alert("Fill all fields");return;}
+books.push({title,author,category,copies,available:copies});
+document.getElementById("btitle").value="";
+document.getElementById("bauthor").value="";
+document.getElementById("bcopies").value="";
+displayBooksByCategory();
+updateSelects();
+updateDashboard();
+}
+
+// DISPLAY BOOKS BY CATEGORY
+function displayBooksByCategory(){
+let html="";
+for(let c of categories){
+html+=`<h4>${c}</h4>`;
+html+=`<table><thead><tr><th>Title</th><th>Author</th><th>Total Copies</th><th>Available</th></tr></thead><tbody>`;
+for(let b of books){
+if(b.category==c){
+html+=`<tr><td>${b.title}</td><td>${b.author}</td><td>${b.copies}</td><td>${b.available}</td></tr>`;
+}
+}
+html+=`</tbody></table>`;
+}
+document.getElementById("booksByCategory").innerHTML=html;
+}
+
+// BORROWERS
+function addBorrower(){
+let name=document.getElementById("name").value.trim();
+let phone=document.getElementById("phone").value.trim();
+let idno=document.getElementById("idno").value.trim();
+if(name==""||phone==""||idno==""){alert("Fill all fields");return;}
+borrowers.push({name,phone,idno});
+document.getElementById("name").value="";
+document.getElementById("phone").value="";
+document.getElementById("idno").value="";
+displayBorrowers();
+updateSelects();
+updateDashboard();
+}
+
+function displayBorrowers(){
+let html="";
+for(let b of borrowers){
+html+=`<tr><td>${b.name}</td><td>${b.phone}</td><td>${b.idno}</td></tr>`;
+}
+document.getElementById("borrowerTable").innerHTML=html;
+}
+
+// UPDATE SELECTS FOR BORROW / RETURN
+function updateSelects(){
+let bs="",bk="";
+for(let b of borrowers){bs+=`<option>${b.name}</option>`;}
+for(let b of books){bk+=`<option>${b.title}</option>`;}
+document.getElementById("selectBorrower").innerHTML=bs;
+document.getElementById("selectBook").innerHTML=bk;
+}
+
+// BORROW BOOK
+function borrowBook(){
+let borrower=document.getElementById("selectBorrower").value;
+let book=document.getElementById("selectBook").value;
+let db=document.getElementById("dateBorrowed").value;
+let dd=document.getElementById("dateDue").value;
+if(db==""||dd==""){alert("Select dates");return;}
+for(let b of books){
+if(b.title==book && b.available>0){
+b.available--;
+records.push({borrower,book,db,dd,status:"Borrowed"});
+displayBooksByCategory();
+displayRecords();
+updateDashboard();
+alert("Book Borrowed Successfully");
+return;
+}
+}
+alert("Book Not Available");
+}
+
+// RETURN BOOK
+function returnBook(){
+let borrower=document.getElementById("selectBorrower").value;
+let book=document.getElementById("selectBook").value;
+for(let r of records){
+if(r.borrower==borrower && r.book==book && r.status=="Borrowed"){
+r.status="Returned";
+for(let b of books){if(b.title==book){b.available++;}}
+displayBooksByCategory();
+displayRecords();
+updateDashboard();
+alert("Book Returned Successfully");
+return;
+}
+}
+alert("No Borrow Record Found");
+}
+
+// DISPLAY RECORDS
+function displayRecords(){
+let html="";
+for(let r of records){
+html+=`<tr><td>${r.borrower}</td><td>${r.book}</td><td>${r.db}</td><td>${r.dd}</td><td>${r.status}</td></tr>`;
+}
+document.getElementById("recordTable").innerHTML=html;
+}
+
+// DASHBOARD
+function updateDashboard(){
+let total=0,avail=0,borrowed=0;
+for(let b of books){total+=b.copies; avail+=b.available; borrowed+=(b.copies-b.available);}
+document.getElementById("totalBooks").innerHTML=total;
+document.getElementById("availableBooks").innerHTML=avail;
+document.getElementById("borrowedBooks").innerHTML=borrowed;
+document.getElementById("totalBorrowers").innerHTML=borrowers.length;
+}
+</script>
+</body>
+</html>
