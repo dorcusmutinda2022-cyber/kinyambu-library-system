@@ -34,5 +34,5 @@ This project is an online library management system designed to:
 - This project was built as a **student project for demonstration purposes**.
 
 ## Contact
-- Author Email: dorcus@example.com (optional)
+- Author Email: dorcusmutinda@gmail.com (optional)
 - Created: 2026
